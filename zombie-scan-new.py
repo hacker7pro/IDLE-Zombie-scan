@@ -62,7 +62,7 @@ def get_ipid(zombie_ip, probe_port, flag="SA"):
 
 def trigger_zombie(zombie_ip, target_ip, target_port, ttl):
     # Correct: src = zombie_ip, dst = target_ip
-    spoofed = IP(src=target_ip, dst=zombie_ip, ttl=ttl) / TCP(
+    spoofed = IP(src=target_ip, dst=zombie_ip, ttl=ttl, id=0, flags=2) / TCP(
         sport=389,           # Fixed predictable source port
         dport=target_port,
         flags="S",             # SYN only!
@@ -77,7 +77,7 @@ def idle_scan_port(zombie_ip, zport, tip, tport, flag="SA", ttl=64):
             return ("Zombie unreachable", ipid1, None, None)
 
         trigger_zombie(zombie_ip, tip, tport, ttl)
-        time.sleep(0.4)
+        time.sleep(0.5)
 
         ipid2 = get_ipid(zombie_ip, zport, flag)
         if not ipid2:
@@ -91,7 +91,7 @@ def idle_scan_port(zombie_ip, zport, tip, tport, flag="SA", ttl=64):
             return ("CLOSED/FILTERED", ipid1, ipid2, delta)
         else:
             time.sleep(0.5)
-
+        time.sleep(1)
     return ("UNRELIABLE", ipid1, ipid2, delta if 'delta' in locals() else "N/A")
 
 # ===================== START SCAN =====================
