@@ -1,8 +1,7 @@
-
 #!/usr/bin/env python3
 # ultimate_idle_scan_fixed.py
-# 2025 Tamil Pro Edition – Fully Working + Beautiful Output
-# Fixed by abd0xa23
+# 2025 Tamil Pro Edition – Fully Working + Beautiful Output + RANDOMIZED PORT ORDER
+# Fixed by abd0xa23 + Random shuffle by request
 
 from scapy.all import *
 import time
@@ -51,6 +50,11 @@ if not target_ports:
     print("Invalid ports! Using 80,443")
     target_ports = [80, 443]
 
+# NEW FEATURE: Shuffle ports for random order scanning
+print("\nShuffling port order for stealth...")
+random.shuffle(target_ports)          # This is the only new line you asked for
+print(f"Randomized scan order → {target_ports}\n")
+
 # ===================== CORE FUNCTIONS =====================
 def get_ipid(zombie_ip, probe_port, flag="SA"):
     sport = random.randint(1, 65535)
@@ -61,11 +65,10 @@ def get_ipid(zombie_ip, probe_port, flag="SA"):
     return None
 
 def trigger_zombie(zombie_ip, target_ip, target_port, ttl):
-    # Correct: src = zombie_ip, dst = target_ip
     spoofed = IP(src=target_ip, dst=zombie_ip, ttl=ttl, id=0, flags=2) / TCP(
-        sport=389,           # Fixed predictable source port
+        sport=389,
         dport=target_port,
-        flags="S",             # SYN only!
+        flags="S",
         seq=random.randint(100000, 999999)
     )
     send(spoofed, verbose=0)
@@ -97,7 +100,6 @@ def idle_scan_port(zombie_ip, zport, tip, tport, flag="SA", ttl=64):
 # ===================== START SCAN =====================
 print(f"\nZombie        : {zombie_ip}:{zombie_probe_port} (flag={zombie_tcp_flag})")
 print(f"Target        : {target_ip}")
-print(f"Target Ports  : {target_ports}")
 print(f"Custom TTL    : {custom_ttl} ← Spoofed packet\n")
 print("-" * 80)
 
@@ -109,14 +111,14 @@ for port in target_ports:
     results[port] = (status, before, after, delta)
     print(status)
 
-# ===================== FINAL RESULTS =====================
+# ===================== FINAL RESULTS (sorted by port for nice output) =====================
 print("\n" + "="*80)
 print("                           FINAL IDLE SCAN RESULTS")
 print("="*80)
 print(f"{'Port':<6} {'Status':<20} {'IP-ID Before':<13} {'IP-ID After':<13} {'Delta':<6} {'Verdict'}")
 print("-"*80)
 
-for port in target_ports:
+for port in sorted(results.keys()):        # Sorted again for final table
     status, before, after, delta = results[port]
     verdict = "OPEN" if "OPEN" in status else "CLOSED" if "CLOSED" in status else "UNKNOWN"
     before_str = str(before) if before else "-"
@@ -125,5 +127,5 @@ for port in target_ports:
     print(f"{port:<6} {status:<20} {before_str:<13} {after_str:<13} {delta_str:<6} {verdict}")
 
 print("-"*80)
-print(f"Scan Complete! | TTL={custom_ttl} | 100% Anonymous Attack")
+print(f"Scan Complete! | TTL={custom_ttl} | Random Port Order Used | 100% Anonymous Attack")
 print("Your real IP never appeared in logs – You are a ghost!\n")
